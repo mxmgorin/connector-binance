@@ -1,4 +1,5 @@
 pub use crate::common::{Coin, Id, MarketType, OrderInfo, Side, Symbol, TradeInfo};
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -80,22 +81,8 @@ pub struct DepthOrderbookData {
     pub previous_final_update_id: Option<u64>,
 
     #[serde(rename = "b")]
-    pub bids: Vec<Level>,
+    pub bids: Vec<(Decimal, Decimal)>,
 
     #[serde(rename = "a")]
-    pub asks: Vec<Level>,
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Level {
-    #[serde(with = "string_or_float")]
-    pub price: f64,
-    #[serde(with = "string_or_float")]
-    pub qty: f64,
-}
-
-impl Level {
-    pub fn new(price: f64, qty: f64) -> Level {
-        Level { price, qty }
-    }
+    pub asks: Vec<(Decimal, Decimal)>,
 }
