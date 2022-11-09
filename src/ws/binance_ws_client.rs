@@ -38,7 +38,7 @@ impl BinanceWsClient {
             .is_started
             .load(std::sync::atomic::Ordering::Relaxed)
         {
-            let ping_message = Message::Ping(vec!());
+            let ping_message = Message::Ping(vec![]);
             ftx_ws_client
                 .ws_client
                 .start(ping_message, ftx_ws_client.clone());
@@ -82,9 +82,9 @@ impl WsCallback for BinanceWsClient {
             Message::Text(msg) => {
                 let event = self.parse_msg(&msg);
                 match event {
-                    Ok(event) =>{
+                    Ok(event) => {
                         self.event_handler.on_data(event).await;
-                    },
+                    }
                     Err(err) => {
                         self.logger.write_info(
                             "BinanceWsClient".to_string(),
@@ -93,9 +93,11 @@ impl WsCallback for BinanceWsClient {
                         );
                         connection.disconnect().await;
                     }
-                }               
+                }
             }
-            Message::Ping(_) => (), // todo: send pong
+            Message::Ping(_) => {
+                connection.send_message(Message::Ping(vec![])).await;
+            }
             Message::Pong(_) | Message::Binary(_) | Message::Frame(_) => (),
             Message::Close(_) => {
                 self.logger.write_info(
