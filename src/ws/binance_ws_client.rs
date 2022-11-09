@@ -61,7 +61,7 @@ impl BinanceWsClient {
             }
         }
 
-        return Err("Failed to parse".to_string());
+        return Err(format!("Failed to parse message: {}", msg));
     }
 }
 
@@ -81,16 +81,19 @@ impl WsCallback for BinanceWsClient {
         match data {
             Message::Text(msg) => {
                 let event = self.parse_msg(&msg);
-                if let Ok(event) = event {
-                    self.event_handler.on_data(event).await;
-                } else {
-                    self.logger.write_info(
-                        "BinanceWsClient".to_string(),
-                        format!("Disconnecting... Failed to parse ws message"),
-                        None,
-                    );
-                    connection.disconnect().await;
-                }
+                match event {
+                    Ok(event) =>{
+                        self.event_handler.on_data(event).await;
+                    },
+                    Err(err) => {
+                        self.logger.write_info(
+                            "BinanceWsClient".to_string(),
+                            format!("Disconnecting... {} ", err),
+                            None,
+                        );
+                        connection.disconnect().await;
+                    }
+                }               
             }
             Message::Ping(_) => (), // todo: send pong
             Message::Pong(_) | Message::Binary(_) | Message::Frame(_) => (),
