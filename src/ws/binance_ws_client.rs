@@ -73,6 +73,7 @@ impl WsCallback for BinanceWsClient {
             "Connected to Binance websocket".to_string(),
             None,
         );
+        self.event_handler.on_connected().await;
     }
 
     async fn on_disconnected(&self, _: Arc<WsConnection>) {}

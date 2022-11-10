@@ -24,6 +24,10 @@ impl EventHandler for OrderBookHandler {
             },
         }
     }
+
+    async fn on_connected(&self) {
+        println!("Connected to ws");
+    }
 }
 
 pub struct ConsoleLogger {}
