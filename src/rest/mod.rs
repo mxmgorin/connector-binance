@@ -8,3 +8,4 @@ mod models;
 
 pub use market_client::*;
 pub use enpoints::*;
+pub use models::*;
