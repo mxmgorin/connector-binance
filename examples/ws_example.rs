@@ -22,6 +22,11 @@ impl EventHandler for OrderBookHandler {
                 println!("{:?}", orderbook_data);
                 println!("-------------------------------");
             },
+            WsDataEvent::BookTicker(book_ticker) => {
+                println!("Recieved bookTicker:");
+                println!("{:?}", book_ticker);
+                println!("-------------------------------");
+            },
         }
     }
 
@@ -55,8 +60,8 @@ impl Logger for ConsoleLogger {
 #[tokio::main]
 async fn main() {
     let channels = vec![
+        WsChannel::BookTicker("ethbtc".to_owned()),
         WsChannel::DepthOrderbook("ethbtc".to_owned()),
-        //WsChannel::DepthOrderbook("ETH/USD".to_owned()),
     ];
     let event_handler = Arc::new(OrderBookHandler {});
     let ftx_ws = BinanceWsClient::new(

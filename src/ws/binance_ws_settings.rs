@@ -15,6 +15,9 @@ impl BinanceWsSetting {
                 WsChannel::DepthOrderbook(symbol) => {
                     endpoints.push(format!("{}@depth@100ms", symbol.to_lowercase()))
                 }
+                WsChannel::BookTicker(symbol) => {
+                    endpoints.push(format!("{}@bookTicker", symbol.to_lowercase()))
+                }
             }
         }
         Self { endpoints }
