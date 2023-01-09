@@ -1,28 +1,31 @@
-use std::time::Duration;
-
-use connector_binance::rest::{BinanceMarketClient, BinanceRestClient};
+use chrono::{Utc, Duration};
+use connector_binance::rest::{BinanceMarketClient, BinanceRestClient, KlineInterval};
 
 #[tokio::main]
 async fn main() {
     let market: BinanceMarketClient = BinanceRestClient::new(None, None);
 
     loop {
-        // Order book at default depth
-        match market.get_depth("BNBETH").await {
-            Ok(answer) => println!("Default depth: {:?}", answer),
-            Err(e) => println!("Error: {}", e),
-        }
-        println!("=====================================================");
+        //get_orderbook(&market).await;
+        get_klines(&market).await;
 
-        tokio::time::sleep(Duration::from_secs(2)).await;
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+    }
+}
 
-        // Order book at depth 500
-        match market.get_custom_depth("BNBETH", 5).await {
-            Ok(answer) => println!("Custom depth: {:?}", answer),
-            Err(e) => println!("Error: {}", e),
-        }
-        println!("=====================================================");
+#[allow(dead_code)]
+async fn get_orderbook(market: &BinanceMarketClient) {
+    match market.get_custom_depth("BNBETH", 5).await {
+        Ok(answer) => println!("Custom depth: {:?}", answer),
+        Err(e) => println!("Error: {}", e),
+    }
+}
 
-        tokio::time::sleep(Duration::from_secs(2)).await;
+async fn get_klines(market: &BinanceMarketClient) {
+    let end = Utc::now();
+    let start = end - Duration::minutes(30);
+    match market.get_klines("BNBBUSD", KlineInterval::I1m, 1, Some(start), Some(end)).await {
+        Ok(answer) => println!("Klines: {:?}", answer),
+        Err(e) => println!("Error: {}", e),
     }
 }

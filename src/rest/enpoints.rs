@@ -12,6 +12,7 @@ pub enum BinanceApiEndpoint {
 pub enum BinanceSpotEnpoint {
     Ping,
     Depth,
+    Klines,
 }
 
 impl From<BinanceApiEndpoint> for String {
@@ -20,6 +21,7 @@ impl From<BinanceApiEndpoint> for String {
             BinanceApiEndpoint::Spot(route) => match route {
                 BinanceSpotEnpoint::Ping => "/api/v3/ping",
                 BinanceSpotEnpoint::Depth => "/api/v3/depth",
+                BinanceSpotEnpoint::Klines => "/api/v3/klines",
             },           
         })
     }
