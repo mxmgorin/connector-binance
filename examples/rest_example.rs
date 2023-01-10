@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use chrono::{Utc, Duration};
 use connector_binance::rest::{BinanceMarketClient, BinanceRestClient, KlineInterval};
 
@@ -23,9 +25,14 @@ async fn get_orderbook(market: &BinanceMarketClient) {
 
 async fn get_klines(market: &BinanceMarketClient) {
     let end = Utc::now();
-    let start = end - Duration::minutes(30);
-    match market.get_klines("BNBBUSD", KlineInterval::I1m, 1, Some(start), Some(end)).await {
-        Ok(answer) => println!("Klines: {:?}", answer),
+    let start = end - Duration::minutes(60);
+    println!("start: {}; end: {}", start.timestamp_millis(), end.timestamp_millis());
+
+    match market.get_klines("BNBBUSD", KlineInterval::I1m, 10, Some(start), Some(end)).await {
+        Ok(klines) => {
+            let dates: BTreeSet<i64> = klines.iter().map(|l| l.open_time).collect();
+            println!("dates: {:?}", dates);
+        },
         Err(e) => println!("Error: {}", e),
     }
 }
