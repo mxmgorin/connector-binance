@@ -1,4 +1,5 @@
 use std::{sync::Arc, time::Duration};
+use std::collections::HashMap;
 
 use connector_binance::ws::{
     EventHandler, BinanceWsClient, WsChannel, WsDataEvent
@@ -54,6 +55,9 @@ impl Logger for ConsoleLogger {
         _message: String,
         _ctx: Option<std::collections::HashMap<String, String>>,
     ) {
+    }
+
+    fn write_debug_info(&self, process: String, message: String, ctx: Option<HashMap<String, String>>) {
     }
 }
 
