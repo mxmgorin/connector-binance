@@ -9,24 +9,24 @@ edition = "2021"
 my-web-socket-client = { tag = "0.1.1", git = "https://github.com/MyJetTools/my-web-socket-client" }
 rust-extensions = { tag = "0.1.4", git = "https://github.com/MyJetTools/rust-extensions.git" }
 
-chrono = { version = "^0.4.19", features = ["serde"] }
-http = "0.2"
-rust_decimal = "^1.13.0"
-rust_decimal_macros = "^1.14.1"
-serde = { version = "^1.0.125", features = ["derive"] }
-serde_json = "^1.0.64"
-serde_with = { version = "2.0.1", features = ["chrono"] }
-tokio = { version = "1.21.2" }
+tokio = { version = "*" }
 tokio-tungstenite = { version = "*", features = ["native-tls"] }
-hmac-sha256 = "1.1.4"
-thiserror = "1"
-crc32fast = "^1.2.1"
-hex = "^0.4.3"
+chrono = { version = "*", features = ["serde"] }
+http = "*"
+rust_decimal = "*"
+rust_decimal_macros = "*"
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+serde_with = { version = "*", features = ["chrono"] }
+hmac-sha256 = "*"
+thiserror = "*"
+crc32fast = "*"
+hex = "*"
 async-trait = "*"
 futures = "*"
 future-utils = "*"
-reqwest = { version = "0.11.4", features = ["blocking", "json"] }
-sha2 = "0.10.6"
-error-chain = { version = "0.12.4", default-features = false }
-hmac = "0.12.1"
-url = "2.2.2"
+reqwest = { version = "*", features = ["blocking", "json"] }
+sha2 = "*"
+error-chain = { version = "*", default-features = false }
+hmac = "*"
+url = "*"
