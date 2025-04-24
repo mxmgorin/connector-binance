@@ -1,15 +1,14 @@
-use my_web_socket_client::WebSocketClient;
+use my_web_socket_client::{StartWsConnectionDataToApply, WebSocketClient};
 use my_web_socket_client::WsCallback;
 use my_web_socket_client::WsConnection;
-use rust_extensions::Logger;
+use rust_extensions::{Logger};
 use serde_json::Error;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
-
 use super::binance_ws_settings::BinanceWsSetting;
 use super::event_handler::*;
 use super::models::*;
-use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::tungstenite::{Bytes, Message};
 
 pub struct BinanceWsClient {
     event_handler: Arc<dyn EventHandler + Send + Sync + 'static>,
@@ -24,10 +23,12 @@ impl BinanceWsClient {
         logger: Arc<dyn Logger + Send + Sync + 'static>,
         channels: Vec<WsChannel>,
     ) -> Self {
+        rustls::crypto::ring::default_provider().install_default().expect("Failed to install rustls crypto provider");
         let settings = Arc::new(BinanceWsSetting::new(channels));
+
         Self {
             event_handler,
-            ws_client: WebSocketClient::new("Binance".to_string(), settings, logger.clone()),
+            ws_client: WebSocketClient::new(Arc::new("Binance".into()), settings, logger.clone()),
             logger,
             is_started: AtomicBool::new(false),
         }
@@ -38,10 +39,10 @@ impl BinanceWsClient {
             .is_started
             .load(std::sync::atomic::Ordering::Relaxed)
         {
-            let ping_message = Message::Ping(vec![]);
+            let ping_message = Message::Ping(Bytes::default());
             ftx_ws_client
                 .ws_client
-                .start(ping_message, ftx_ws_client.clone());
+                .start(Some(ping_message), ftx_ws_client.clone());
             ftx_ws_client
                 .is_started
                 .store(true, std::sync::atomic::Ordering::SeqCst);
@@ -67,6 +68,10 @@ impl BinanceWsClient {
 
 #[async_trait::async_trait]
 impl WsCallback for BinanceWsClient {
+    async fn before_start_ws_connect(&self, _url: String) -> Result<StartWsConnectionDataToApply, String> {
+        Ok(StartWsConnectionDataToApply::default())
+    }
+
     async fn on_connected(&self, _: Arc<WsConnection>) {
         self.logger.write_info(
             "BinanceWsClient".to_string(),
@@ -97,13 +102,13 @@ impl WsCallback for BinanceWsClient {
                 }
             }
             Message::Ping(_) => {
-                connection.send_message(Message::Ping(vec![])).await;
+                connection.send_message(Message::Ping(Bytes::default())).await;
             }
             Message::Pong(_) | Message::Binary(_) | Message::Frame(_) => (),
             Message::Close(_) => {
                 self.logger.write_info(
                     "BinanceWsClient".to_string(),
-                    format!("Disconnecting... Recieved close ws message"),
+                    "Disconnecting... Recieved close ws message".to_string(),
                     None,
                 );
             }

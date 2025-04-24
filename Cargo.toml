@@ -1,32 +1,26 @@
 [package]
 name = "connector-binance"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-my-web-socket-client = { tag = "0.1.1", git = "https://github.com/MyJetTools/my-web-socket-client" }
-rust-extensions = { tag = "0.1.4", git = "https://github.com/MyJetTools/rust-extensions.git" }
+my-web-socket-client = { tag = "0.2.0", git = "https://github.com/MyJetTools/my-web-socket-client" }
+rust-extensions = { tag = "0.1.5", git = "https://github.com/MyJetTools/rust-extensions.git" }
 
 tokio = { version = "*" }
 tokio-tungstenite = { version = "*", features = ["native-tls"] }
 chrono = { version = "*", features = ["serde"] }
-http = "*"
 rust_decimal = "*"
-rust_decimal_macros = "*"
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
-serde_with = { version = "*", features = ["chrono"] }
-hmac-sha256 = "*"
 thiserror = "*"
-crc32fast = "*"
 hex = "*"
 async-trait = "*"
-futures = "*"
-future-utils = "*"
 reqwest = { version = "*", features = ["blocking", "json"] }
 sha2 = "*"
 error-chain = { version = "*", default-features = false }
 hmac = "*"
 url = "*"
+rustls = "0.23.26"

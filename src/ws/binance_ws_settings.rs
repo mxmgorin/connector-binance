@@ -26,8 +26,8 @@ impl BinanceWsSetting {
 
 #[async_trait::async_trait]
 impl WsClientSettings for BinanceWsSetting {
-    async fn get_url(&self) -> String {
-        return BinanceWsUrl::MultiStream.params(&self.endpoints.join("/"));
+    async fn get_url(&self, _client_name: &str) -> Option<String> {
+        Some(BinanceWsUrl::MultiStream.params(&self.endpoints.join("/")))
     }
 }
 
