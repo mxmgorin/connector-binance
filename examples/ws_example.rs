@@ -1,33 +1,30 @@
-use std::{sync::Arc, time::Duration};
-use std::collections::HashMap;
-
-use connector_binance::ws::{
-    EventHandler, BinanceWsClient, WsChannel, WsDataEvent
-};
+use connector_binance::ws::{BinanceWsClient, EventHandler, KlineInterval, WsChannel, WsDataEvent};
 use rust_extensions::Logger;
+use std::collections::HashMap;
+use std::{sync::Arc, time::Duration};
 
-pub struct OrderBookHandler {}
-
-impl OrderBookHandler {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
+#[derive(Default)]
+pub struct ExampleEventHandler {}
 
 #[async_trait::async_trait]
-impl EventHandler for OrderBookHandler {
+impl EventHandler for ExampleEventHandler {
     async fn on_data(&self, event: WsDataEvent) {
         match event {
-            WsDataEvent::DepthOrderbook(orderbook_data) => {
-                println!("Recieved orderbook:");
-                println!("{:?}", orderbook_data);
+            WsDataEvent::DepthOrderbook(data) => {
+                println!("Received DepthOrderbook:");
+                println!("{:?}", data);
                 println!("-------------------------------");
-            },
-            WsDataEvent::BookTicker(book_ticker) => {
-                println!("Recieved bookTicker:");
-                println!("{:?}", book_ticker);
+            }
+            WsDataEvent::BookTicker(data) => {
+                println!("Received BookTicker:");
+                println!("{:?}", data);
                 println!("-------------------------------");
-            },
+            }
+            WsDataEvent::Kline(data) => {
+                println!("Received Kline:");
+                println!("{:?}", data);
+                println!("-------------------------------");
+            }
         }
     }
 
@@ -36,46 +33,61 @@ impl EventHandler for OrderBookHandler {
     }
 }
 
-pub struct ConsoleLogger {}
+pub struct ExampleLogger {}
 
-impl Logger for ConsoleLogger {
-    fn write_info(&self, _process: String, _message: String, _ctx: Option<std::collections::HashMap<String, String>>) {
-        
+impl Logger for ExampleLogger {
+    fn write_info(
+        &self,
+        _process: String,
+        _message: String,
+        _ctx: Option<HashMap<String, String>>,
+    ) {
     }
 
-    fn write_warning(&self, _process: String, _message: String, _ctx: Option<std::collections::HashMap<String, String>>) {
+    fn write_warning(
+        &self,
+        _process: String,
+        _message: String,
+        _ctx: Option<HashMap<String, String>>,
+    ) {
     }
 
-    fn write_error(&self, _process: String,_messagee: String, _ctx: Option<std::collections::HashMap<String, String>>) {
+    fn write_error(
+        &self,
+        _process: String,
+        _message: String,
+        _ctx: Option<HashMap<String, String>>,
+    ) {
     }
 
     fn write_fatal_error(
         &self,
         _process: String,
         _message: String,
-        _ctx: Option<std::collections::HashMap<String, String>>,
+        _ctx: Option<HashMap<String, String>>,
     ) {
     }
 
-    fn write_debug_info(&self, process: String, message: String, ctx: Option<HashMap<String, String>>) {
+    fn write_debug_info(
+        &self,
+        _process: String,
+        _message: String,
+        _ctx: Option<HashMap<String, String>>,
+    ) {
     }
 }
 
 #[tokio::main]
 async fn main() {
     let channels = vec![
-        WsChannel::BookTicker("ethbtc".to_owned()),
-        WsChannel::DepthOrderbook("ethbtc".to_owned()),
+        //WsChannel::BookTicker("ethbtc".to_owned()),
+        //WsChannel::DepthOrderbook("ethbtc".to_owned()),
+        WsChannel::Kline("ethbtc".to_owned(), KlineInterval::OneMinute),
     ];
-    let event_handler = Arc::new(OrderBookHandler {});
-    let ftx_ws = BinanceWsClient::new(
-        event_handler,
-        Arc::new(ConsoleLogger{}),
-        channels,
-    );
+    let event_handler = Arc::new(ExampleEventHandler::default());
+    let ws_client = BinanceWsClient::new(event_handler, Arc::new(ExampleLogger {}), channels);
 
-    BinanceWsClient::start(Arc::new(ftx_ws));
-
+    BinanceWsClient::start(Arc::new(ws_client));
 
     loop {
         tokio::time::sleep(Duration::from_secs(1)).await;

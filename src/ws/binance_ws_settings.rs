@@ -18,6 +18,9 @@ impl BinanceWsSetting {
                 WsChannel::BookTicker(symbol) => {
                     endpoints.push(format!("{}@bookTicker", symbol.to_lowercase()))
                 }
+                WsChannel::Kline(symbol, interval) => {
+                    endpoints.push(format!("{}@kline_{}", symbol.to_lowercase(), interval));
+                }
             }
         }
         Self { endpoints }
