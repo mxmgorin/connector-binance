@@ -1,20 +1,19 @@
-use my_web_socket_client::{StartWsConnectionDataToApply, WebSocketClient};
-use my_web_socket_client::WsCallback;
-use my_web_socket_client::WsConnection;
-use rust_extensions::{Logger};
-use serde_json::Error;
-use std::sync::atomic::AtomicBool;
-use std::sync::Arc;
 use super::binance_ws_settings::{BinanceWsSetting, BinanceWsSettingWrapper};
 use super::event_handler::*;
 use super::models::*;
+use my_web_socket_client::WsCallback;
+use my_web_socket_client::WsConnection;
+use my_web_socket_client::{StartWsConnectionDataToApply, WebSocketClient};
+use rust_extensions::Logger;
+use serde_json::Error;
+use std::sync::{Arc, Mutex};
 use tokio_tungstenite::tungstenite::{Bytes, Message};
 
 pub struct BinanceWsClient {
     event_handler: Arc<dyn EventHandler + Send + Sync + 'static>,
-    inner_ws_client: WebSocketClient,
+    inner_ws_client: Mutex<Option<WebSocketClient>>,
+    settings: Arc<BinanceWsSettingWrapper>,
     logger: Arc<dyn Logger + Send + Sync + 'static>,
-    is_started: AtomicBool,
 }
 
 impl BinanceWsClient {
@@ -23,30 +22,27 @@ impl BinanceWsClient {
         logger: Arc<dyn Logger + Send + Sync + 'static>,
         settings: Arc<dyn BinanceWsSetting + Send + Sync + 'static>,
     ) -> Self {
-        rustls::crypto::ring::default_provider().install_default().expect("Failed to install rustls crypto provider");
+        rustls::crypto::ring::default_provider()
+            .install_default()
+            .expect("Failed to install rustls crypto provider");
         let settings = Arc::new(BinanceWsSettingWrapper::new(settings));
 
         Self {
             event_handler,
-            inner_ws_client: WebSocketClient::new(Arc::new("Binance".into()), settings, logger.clone()),
+            inner_ws_client: Default::default(),
             logger,
-            is_started: AtomicBool::new(false),
+            settings,
         }
     }
 
     pub fn start(ws_client: Arc<BinanceWsClient>) {
-        if !ws_client
-            .is_started
-            .load(std::sync::atomic::Ordering::Relaxed)
-        {
-            let ping_message = Message::Ping(Bytes::default());
-            ws_client
-                .inner_ws_client
-                .start(Some(ping_message), ws_client.clone());
-            ws_client
-                .is_started
-                .store(true, std::sync::atomic::Ordering::SeqCst);
-        }
+        let inner = WebSocketClient::new(
+            Arc::new("Binance".into()),
+            ws_client.settings.clone(),
+            ws_client.logger.clone(),
+        );
+        inner.start(Some(Message::Ping(Bytes::default())), ws_client.clone());
+        ws_client.inner_ws_client.lock().unwrap().replace(inner);
     }
 
     fn parse_msg(&self, msg: &str) -> Result<WsDataEvent, String> {
@@ -68,7 +64,10 @@ impl BinanceWsClient {
 
 #[async_trait::async_trait]
 impl WsCallback for BinanceWsClient {
-    async fn before_start_ws_connect(&self, _url: String) -> Result<StartWsConnectionDataToApply, String> {
+    async fn before_start_ws_connect(
+        &self,
+        _url: String,
+    ) -> Result<StartWsConnectionDataToApply, String> {
         Ok(StartWsConnectionDataToApply::default())
     }
 
@@ -102,13 +101,15 @@ impl WsCallback for BinanceWsClient {
                 }
             }
             Message::Ping(_) => {
-                connection.send_message(Message::Ping(Bytes::default())).await;
+                connection
+                    .send_message(Message::Ping(Bytes::default()))
+                    .await;
             }
             Message::Pong(_) | Message::Binary(_) | Message::Frame(_) => (),
             Message::Close(_) => {
                 self.logger.write_info(
                     "BinanceWsClient".to_string(),
-                    "Disconnecting... Recieved close ws message".to_string(),
+                    "Disconnecting... Received close ws message".to_string(),
                     None,
                 );
             }
