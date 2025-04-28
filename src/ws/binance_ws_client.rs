@@ -5,7 +5,7 @@ use rust_extensions::{Logger};
 use serde_json::Error;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
-use super::binance_ws_settings::BinanceWsSetting;
+use super::binance_ws_settings::{BinanceWsSetting, BinanceWsSettingWrapper};
 use super::event_handler::*;
 use super::models::*;
 use tokio_tungstenite::tungstenite::{Bytes, Message};
@@ -21,10 +21,10 @@ impl BinanceWsClient {
     pub fn new(
         event_handler: Arc<dyn EventHandler + Send + Sync + 'static>,
         logger: Arc<dyn Logger + Send + Sync + 'static>,
-        channels: Vec<WsChannel>,
+        settings: Arc<dyn BinanceWsSetting + Send + Sync + 'static>,
     ) -> Self {
         rustls::crypto::ring::default_provider().install_default().expect("Failed to install rustls crypto provider");
-        let settings = Arc::new(BinanceWsSetting::new(channels));
+        let settings = Arc::new(BinanceWsSettingWrapper::new(settings));
 
         Self {
             event_handler,
@@ -62,7 +62,7 @@ impl BinanceWsClient {
             }
         }
 
-        return Err(format!("Failed to parse message: {}", msg));
+        Err(format!("Failed to parse message: {}", msg))
     }
 }
 

@@ -1,13 +1,24 @@
-use my_web_socket_client::WsClientSettings;
-
 use super::WsChannel;
+use my_web_socket_client::WsClientSettings;
+use std::sync::Arc;
 
-pub struct BinanceWsSetting {
-    endpoints: Vec<String>,
+#[async_trait::async_trait]
+pub trait BinanceWsSetting {
+    async fn get_channels(&self) -> Vec<WsChannel>;
 }
 
-impl BinanceWsSetting {
-    pub fn new(channels: Vec<WsChannel>) -> Self {
+pub(crate) struct BinanceWsSettingWrapper {
+    inner: Arc<dyn BinanceWsSetting + Send + Sync>,
+}
+
+impl BinanceWsSettingWrapper {
+    pub fn new(inner: Arc<dyn BinanceWsSetting + Send + Sync>) -> Self {
+        Self { inner }
+    }
+
+    pub async fn get_endpoints(&self) -> Vec<String> {
+        let channels = self.inner.get_channels().await;
+
         let mut endpoints: Vec<String> = Vec::new();
 
         for channel in channels.into_iter() {
@@ -23,14 +34,17 @@ impl BinanceWsSetting {
                 }
             }
         }
-        Self { endpoints }
+
+        endpoints
     }
 }
 
 #[async_trait::async_trait]
-impl WsClientSettings for BinanceWsSetting {
+impl WsClientSettings for BinanceWsSettingWrapper {
     async fn get_url(&self, _client_name: &str) -> Option<String> {
-        Some(BinanceWsUrl::MultiStream.params(&self.endpoints.join("/")))
+        let endpoints = self.get_endpoints().await;
+
+        Some(BinanceWsUrl::MultiStream.params(&endpoints.join("/")))
     }
 }
 
@@ -40,7 +54,7 @@ enum BinanceWsUrl {
 }
 
 impl BinanceWsUrl {
-    fn params(self, subscription: &str) -> String {
+    pub fn params(self, subscription: &str) -> String {
         match self {
             //BinanceWsUrl::Default => format!("wss://stream.binance.com:9443/ws/{}", subscription),
             BinanceWsUrl::MultiStream => format!(

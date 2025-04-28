@@ -8,3 +8,4 @@ pub use binance_ws_client::*;
 pub use models::*;
 pub use error::*;
 pub use event_handler::*;
+pub use binance_ws_settings::*;
