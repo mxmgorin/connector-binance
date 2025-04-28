@@ -34,16 +34,16 @@ impl BinanceWsClient {
         }
     }
 
-    pub fn start(ftx_ws_client: Arc<BinanceWsClient>) {
-        if !ftx_ws_client
+    pub fn start(ws_client: Arc<BinanceWsClient>) {
+        if !ws_client
             .is_started
             .load(std::sync::atomic::Ordering::Relaxed)
         {
             let ping_message = Message::Ping(Bytes::default());
-            ftx_ws_client
+            ws_client
                 .ws_client
-                .start(Some(ping_message), ftx_ws_client.clone());
-            ftx_ws_client
+                .start(Some(ping_message), ws_client.clone());
+            ws_client
                 .is_started
                 .store(true, std::sync::atomic::Ordering::SeqCst);
         }
