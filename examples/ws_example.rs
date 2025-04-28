@@ -85,7 +85,6 @@ pub struct ExampleSettings {
 }
 
 #[async_trait::async_trait]
-
 impl BinanceWsSetting for ExampleSettings {
     async fn get_channels(&self) -> Vec<WsChannel> {
         self.channels.clone()
