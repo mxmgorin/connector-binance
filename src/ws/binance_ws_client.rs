@@ -12,7 +12,7 @@ use tokio_tungstenite::tungstenite::{Bytes, Message};
 
 pub struct BinanceWsClient {
     event_handler: Arc<dyn EventHandler + Send + Sync + 'static>,
-    ws_client: WebSocketClient,
+    inner_ws_client: WebSocketClient,
     logger: Arc<dyn Logger + Send + Sync + 'static>,
     is_started: AtomicBool,
 }
@@ -28,7 +28,7 @@ impl BinanceWsClient {
 
         Self {
             event_handler,
-            ws_client: WebSocketClient::new(Arc::new("Binance".into()), settings, logger.clone()),
+            inner_ws_client: WebSocketClient::new(Arc::new("Binance".into()), settings, logger.clone()),
             logger,
             is_started: AtomicBool::new(false),
         }
@@ -41,7 +41,7 @@ impl BinanceWsClient {
         {
             let ping_message = Message::Ping(Bytes::default());
             ws_client
-                .ws_client
+                .inner_ws_client
                 .start(Some(ping_message), ws_client.clone());
             ws_client
                 .is_started
